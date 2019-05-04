@@ -92,4 +92,21 @@ public class TestBookKeeper {
 
         Assert.assertEquals(invoice.getItems().get(0).getProduct().getType(), ProductType.STANDARD);
     }
+
+    @Test
+    void testTwoElementInvoiceWithProductType(){
+        TaxPolicy tax = mock(TaxPolicy.class);
+        ProductData productData = mock(ProductData.class);
+
+        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
+        when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+
+        bookKeeper.issuance(invoiceRequest, tax);
+
+        verify(productData, times(2)).getType();
+    }
 }
