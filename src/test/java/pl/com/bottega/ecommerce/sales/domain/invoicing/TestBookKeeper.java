@@ -1,5 +1,6 @@
 package pl.com.bottega.ecommerce.sales.domain.invoicing;
 
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
@@ -7,11 +8,7 @@ import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 public class TestBookKeeper {
 
@@ -34,7 +31,7 @@ public class TestBookKeeper {
 
         Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
 
-        assertThat(invoice.getItems().size(), is(1));
+        Assert.assertEquals(invoice.getItems().size(), 1);
     }
 
     @Test
@@ -64,7 +61,7 @@ public class TestBookKeeper {
 
         Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
 
-        assertThat(invoice.getItems().size(), is(0));
+        Assert.assertEquals(invoice.getItems().size(), 0);
     }
 
     @Test
@@ -78,5 +75,21 @@ public class TestBookKeeper {
         bookKeeper.issuance(invoiceRequest, tax);
 
         verify(tax, times(0)).calculateTax(any(), any());
+    }
+
+    @Test
+    void testOneElementInvoiceWithProductType(){
+        TaxPolicy tax = mock(TaxPolicy.class);
+        ProductData productData = mock(ProductData.class);
+
+        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
+        when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
+        invoiceRequest.add(requestItem);
+
+        Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
+
+        Assert.assertEquals(invoice.getItems().get(0).getProduct().getType(), ProductType.STANDARD);
     }
 }
