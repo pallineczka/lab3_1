@@ -55,4 +55,10 @@ public class TestAddProductCommandHandler {
         Assert.assertEquals(product.isAvailable(), true);
     }
 
+    @Test
+    public void testProductRepository(){
+        addProductCommandHandler.handle(command);
+
+        verify(productRepository,times(1)).load(id);
+    }
 }
