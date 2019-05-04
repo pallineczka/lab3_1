@@ -75,4 +75,12 @@ public class TestAddProductCommandHandler {
 
         verify(suggestionService,times(0)).suggestEquivalent(product, client);
     }
+
+    @Test
+    public void testProductIsAvailableCalledMethodTwoTimes(){
+        addProductCommandHandler.handle(command);
+        addProductCommandHandler.handle(command);
+
+        verify(product,times(2)).isAvailable();
+    }
 }
