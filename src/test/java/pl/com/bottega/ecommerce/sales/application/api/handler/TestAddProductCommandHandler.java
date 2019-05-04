@@ -68,4 +68,11 @@ public class TestAddProductCommandHandler {
 
         verify(reservationRepository,times(1)).load(id);
     }
+
+    @Test
+    public void testSuggestionService(){
+        addProductCommandHandler.handle(command);
+
+        verify(suggestionService,times(0)).suggestEquivalent(product, client);
+    }
 }
