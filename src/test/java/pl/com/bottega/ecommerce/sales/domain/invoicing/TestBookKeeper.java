@@ -53,4 +53,17 @@ public class TestBookKeeper {
 
         verify(tax, times(2)).calculateTax(ProductType.STANDARD, new Money(5));
     }
+
+    @Test
+    void testZeroElementInvoice(){
+        TaxPolicy tax = mock(TaxPolicy.class);
+        ProductData productData = mock(ProductData.class);
+
+        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
+        when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
+
+        assertThat(invoice.getItems().size(), is(0));
+    }
 }
