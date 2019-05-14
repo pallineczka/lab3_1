@@ -1,6 +1,7 @@
 package pl.com.bottega.ecommerce.sales.domain.invoicing;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
@@ -12,21 +13,38 @@ import static org.mockito.Mockito.*;
 
 public class TestBookKeeper {
 
-    Id id = Id.generate();
-    ClientData clientData = new ClientData(id, "Client");
-    InvoiceRequest invoiceRequest = new InvoiceRequest(clientData);
-    InvoiceFactory invoiceFactory = new InvoiceFactory();
-    BookKeeper bookKeeper = new BookKeeper(invoiceFactory);
+    private Id id;
+    private ClientData clientData;
+    private InvoiceRequest invoiceRequest;
+    private InvoiceFactory invoiceFactory;
+    private BookKeeper bookKeeper;
+    private Money money ;
+    private TaxPolicy tax;
+    private ProductData productData;
+    private RequestItem requestItem;
+
+    @Before
+    public void before(){
+
+        id = Id.generate();
+        clientData = new ClientData(id, "Client");
+        invoiceRequest = new InvoiceRequest(clientData);
+        invoiceFactory = new InvoiceFactory();
+        bookKeeper = new BookKeeper(invoiceFactory);
+        money = new Money(5);
+
+        tax = mock(TaxPolicy.class);
+        productData = mock(ProductData.class);
+
+        when(tax.calculateTax(ProductType.STANDARD, money)).thenReturn(new Tax(money, "23%"));
+        when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        requestItem = new RequestItem(productData, 2, money);
+    }
+
 
     @Test
     void testOneElementInvoice(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
-        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
         invoiceRequest.add(requestItem);
 
         Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
@@ -36,29 +54,16 @@ public class TestBookKeeper {
 
     @Test
     void testTwoElementInvoiceCalledCalculateTaxTwoTimes(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
-        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
         invoiceRequest.add(requestItem);
         invoiceRequest.add(requestItem);
 
         bookKeeper.issuance(invoiceRequest, tax);
 
-        verify(tax, times(2)).calculateTax(ProductType.STANDARD, new Money(5));
+        verify(tax, times(2)).calculateTax(ProductType.STANDARD, money);
     }
 
     @Test
     void testZeroElementInvoice(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
         Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
 
         Assert.assertEquals(invoice.getItems().size(), 0);
@@ -66,12 +71,6 @@ public class TestBookKeeper {
 
     @Test
     void testZeroElementInvoiceNeverCalledCalculateTax(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
         bookKeeper.issuance(invoiceRequest, tax);
 
         verify(tax, times(0)).calculateTax(any(), any());
@@ -79,13 +78,6 @@ public class TestBookKeeper {
 
     @Test
     void testOneElementInvoiceWithProductType(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
-        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
         invoiceRequest.add(requestItem);
 
         Invoice invoice = bookKeeper.issuance(invoiceRequest, tax);
@@ -95,13 +87,6 @@ public class TestBookKeeper {
 
     @Test
     void testTwoElementInvoiceWithProductType(){
-        TaxPolicy tax = mock(TaxPolicy.class);
-        ProductData productData = mock(ProductData.class);
-
-        when(tax.calculateTax(ProductType.STANDARD, new Money(5))).thenReturn(new Tax(new Money(5), "23%"));
-        when(productData.getType()).thenReturn(ProductType.STANDARD);
-
-        RequestItem requestItem = new RequestItem(productData, 2, new Money(5));
         invoiceRequest.add(requestItem);
         invoiceRequest.add(requestItem);
 
